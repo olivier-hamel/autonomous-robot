@@ -2,21 +2,25 @@
 
 #include <cmath>
 
-static float invSqrt(float x) {
+static float invSqrt(float x)
+{
     return 1.0f / std::sqrt(x);
 }
 
-MadgwickFilter::MadgwickFilter(float beta) : beta_(beta) {
-    // Info ici : https://medium.com/@k66115704/imu-madgwick-filter-explanation-556fbe7f02e3 
+MadgwickFilter::MadgwickFilter(float beta) : beta_(beta)
+{
+    // Info ici : https://medium.com/@k66115704/imu-madgwick-filter-explanation-556fbe7f02e3
     reset();
 }
 
-void MadgwickFilter::reset() {
+void MadgwickFilter::reset()
+{
     q0_ = 1.0f;
     q1_ = q2_ = q3_ = 0.0f;
 }
 
-Orientation MadgwickFilter::getOrientation() const {
+Orientation MadgwickFilter::getOrientation() const
+{
     // Conversion quaternion -> angles d'Euler
     Orientation o{};
 
@@ -27,9 +31,12 @@ Orientation MadgwickFilter::getOrientation() const {
 
     // Pitch
     float sinp = 2.0f * (q0_ * q2_ - q3_ * q1_);
-    if (std::fabs(sinp) >= 1.0f) {
+    if (std::fabs(sinp) >= 1.0f)
+    {
         o.pitch = std::copysign(90.0f, sinp);
-    } else {
+    }
+    else
+    {
         o.pitch = std::asin(sinp) * 180.0f / static_cast<float>(M_PI);
     }
 
@@ -40,7 +47,8 @@ Orientation MadgwickFilter::getOrientation() const {
     return o;
 }
 
-void MadgwickFilter::update(const AccelReading &accel, const GyroReading &gyro, float dt) {
+void MadgwickFilter::update(const AccelReading &accel, const GyroReading &gyro, float dt)
+{
     float ax = accel.x_g;
     float ay = accel.y_g;
     float az = accel.z_g;
@@ -48,8 +56,9 @@ void MadgwickFilter::update(const AccelReading &accel, const GyroReading &gyro, 
     float gy = gyro.y_dps * static_cast<float>(M_PI) / 180.0f;
     float gz = gyro.z_dps * static_cast<float>(M_PI) / 180.0f;
 
-    if (ax == 0.0f && ay == 0.0f && az == 0.0f) {
-        return;  // invalid accel
+    if (ax == 0.0f && ay == 0.0f && az == 0.0f)
+    {
+        return; // invalid accel
     }
 
     // Normalisation

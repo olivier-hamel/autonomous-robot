@@ -5,7 +5,8 @@
 /**
  * @brief Interface pour les filtres
  */
-struct OrientationFilter {
+struct OrientationFilter
+{
     virtual ~OrientationFilter() = default;
 
     virtual void reset() = 0;
@@ -13,14 +14,14 @@ struct OrientationFilter {
     virtual Orientation getOrientation() const = 0;
 };
 
-class MadgwickFilter : public OrientationFilter {
+class MadgwickFilter : public OrientationFilter
+{
 public:
-
     /**
      * @param beta Gain du filtre (force du feedback/correction). ~0.01 à 0.3 selon bruit/latence/usage
      */
     explicit MadgwickFilter(float beta = 0.1f);
-    
+
     /**
      * @brief Reset état interne du filtre
      */
@@ -28,7 +29,7 @@ public:
 
     /**
      * @brief Met à jour le filtre avec les nouvelles mesures
-     *  
+     *
      * @param accel      Mesures d'accélération en g
      * @param gyro       Mesures de gyroscope en deg/s
      * @param dt_seconds Nombre de secondes depuis la dernière update

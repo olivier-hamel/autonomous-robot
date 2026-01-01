@@ -8,16 +8,18 @@
 /**
  * @brief Orientation (Euleur) en degrés
  */
-struct Orientation {
-    float roll;   // degrees
-    float pitch;  // degrees
-    float yaw;    // degrees
+struct Orientation
+{
+    float roll;  // degrees
+    float pitch; // degrees
+    float yaw;   // degrees
 };
 
 /**
  * @brief Mesure d'accélération (g)
  */
-struct AccelReading {
+struct AccelReading
+{
     float x_g;
     float y_g;
     float z_g;
@@ -26,7 +28,8 @@ struct AccelReading {
 /**
  * @brief Mesure en degrés/secondes (deg/s)
  */
-struct GyroReading {
+struct GyroReading
+{
     float x_dps;
     float y_dps;
     float z_dps;
@@ -34,17 +37,18 @@ struct GyroReading {
 
 /**
  * @brief Driver MPU6050 sur I2C
- *  
+ *
  * - Se connect au composant
  * - Configure le mpu6050
  * - Lit l'accélération et gyroscope
  * - Expose le GPIO d'interruption
  */
-class Mpu6050 {
+class Mpu6050
+{
 public:
     /**
      * @brief Constructeur
-     *  
+     *
      * @param bus     Référence vers le bus I2C
      * @param address Adress I2C (0x68 par défaut avec 0x69 en backup)
      * @param intPin  GPIO utilisé pour l'interruption
@@ -52,20 +56,20 @@ public:
     explicit Mpu6050(I2CBus &bus, uint8_t address = 0x68, gpio_num_t intPin = GPIO_NUM_2);
 
     /**
-     * @brief Initialise la communication et le capteur 
+     * @brief Initialise la communication et le capteur
      */
     esp_err_t init();
 
     /**
      * @brief Lit l'accélération (x, y, z) et la convertit en g.
-     *  
+     *
      * @param out Structure de sortie remplie si succès
      */
     esp_err_t readAcceleration(AccelReading &out);
 
     /**
      * @brief Lit le gyroscope (x, y, z) et le convertir en deg/s.
-     *  
+     *
      * @param out Structure de sortie remplie si succès
      */
     esp_err_t readGyroscope(GyroReading &out);

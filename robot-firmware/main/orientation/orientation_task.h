@@ -8,7 +8,8 @@
 #include "orientation/mpu6050.h"
 #include "orientation/orientation_filter.h"
 
-struct OrientationSample {
+struct OrientationSample
+{
     Orientation orientation;
     int64_t timestamp_us;
 };
@@ -16,7 +17,8 @@ struct OrientationSample {
 /**
  * @brief Tache qui attends l'interruption "data ready du mpu6050"
  */
-class OrientationTask {
+class OrientationTask
+{
 public:
     /**
      * @brief Constructeur.
@@ -37,7 +39,7 @@ public:
      * @param core_id     Affinité CPU (tskNO_AFFINITY ou 0/1 sur ESP32)
      */
     esp_err_t start(const char *task_name = "imu_task", UBaseType_t priority = tskIDLE_PRIORITY + 1, uint32_t stack_words = 4096, BaseType_t core_id = tskNO_AFFINITY);
-    
+
     /**
      * @brief Queue de sortie
      */

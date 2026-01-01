@@ -10,7 +10,8 @@
  * @brief Wrapper pour gérer le bus I2C.
  */
 
-class I2CBus {
+class I2CBus
+{
 public:
     I2CBus();
     ~I2CBus();
@@ -19,13 +20,13 @@ public:
     I2CBus &operator=(const I2CBus &) = delete;
 
     /**
-     * @brief Initialise le bus I2C 
+     * @brief Initialise le bus I2C
      */
     esp_err_t begin();
 
     /**
      * @brief Ajoute un périphérique I2C au bus et renvoie un handle de device
-     * 
+     *
      * @param address Adresse I2C 7 bits
      * @param clkHz Fréquence scl
      * @param outHandle Pointeur où stocker le handle du device créé
@@ -34,7 +35,7 @@ public:
 
     /**
      * @brief Probe une adresse I2C (ACK/NACK) pour vérifier la présence d'un device
-     * 
+     *
      * @param address Adresse I2C
      * @param timeout_ms Timeout total (ms) pour acquisition du mutex et/ou sonde
      */
@@ -42,7 +43,7 @@ public:
 
     /**
      * @brief Lit des octets depuis un registre
-     *  
+     *
      * @param handle Handle du périphérique I2C
      * @param reg Adresse du registre à lire
      * @param data Buffer de sortie qui reçoit les octets lus
@@ -52,17 +53,17 @@ public:
 
     /**
      * @brief Écrit plusieurs octects dans un registre
-     *  
+     *
      * @param handle Handle du prériphérique I2C
      * @param ref Adresse du registre de départ
      * @param data Données à écrire
-     * @param len Nombre d'octets à écrire depuis data 
+     * @param len Nombre d'octets à écrire depuis data
      */
     esp_err_t writeBytes(i2c_master_dev_handle_t handle, uint8_t reg, const uint8_t *data, size_t len) const;
 
     /**
-     * @brief Écrit un seul octet dans un registre 
-     *  
+     * @brief Écrit un seul octet dans un registre
+     *
      * @param handle Handle du prériphérique I2C
      * @param ref Adresse du registre
      * @param value Valeur à écrire
@@ -71,7 +72,7 @@ public:
 
     /**
      * @brief Retire un périphérique du bus
-     *  
+     *
      * @param handle Handle du périphérique à retirer
      */
     esp_err_t removeDevice(i2c_master_dev_handle_t handle);
@@ -83,7 +84,7 @@ private:
 
     /**
      * @brief Prend le mutex
-     *  
+     *
      * @param timeout_ms Temps d'attente en ms pour obtenir le lock
      */
     esp_err_t lock(int timeout_ms = 1000) const;

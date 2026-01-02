@@ -59,7 +59,7 @@ esp_err_t DriveBase::sampleWheelStates(WheelStates &out)
     ESP_RETURN_ON_ERROR(driver_.readEncoderDelta(deltas), TAG, "Read deltas failed");
     ESP_RETURN_ON_ERROR(driver_.readBatteryVoltage(battery), TAG, "Read battery failed");
 
-    for (size_t i = 0; totals.size(); ++i)
+    for (size_t i = 0; i < totals.size(); ++i)
     {
         out.position_rad[i] = wheelCountsToRadians(totals[i]);
         out.velocity_rad_s[i] = deltaCountsToRadPerSec(deltas[i], kDeltaSampleSeconds);

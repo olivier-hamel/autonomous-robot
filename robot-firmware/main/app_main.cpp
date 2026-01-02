@@ -15,6 +15,8 @@
 #include "drive/yahboom_motor_driver.h"
 #include "drive/drive_base.h"
 
+#include "micro_ros/micro_ros_int32_publisher.h"
+
 static const char *TAG = "app";
 
 static void scan_bus(I2CBus &bus)
@@ -151,6 +153,12 @@ extern "C" void app_main()
 
     OrientationTask orientation_task(imu, filter, pdMS_TO_TICKS(50));
     ESP_ERROR_CHECK(orientation_task.start("imu_task", tskIDLE_PRIORITY + 2, 4096, tskNO_AFFINITY));
+
+    esp_err_t uros_err = micro_ros_int32_publisher_start();
+    if (uros_err != ESP_OK)
+    {
+        ESP_LOGW(TAG, "micro-ROS publisher not started: %s", esp_err_to_name(uros_err));
+    }
 
     OrientationSample sample{};
     while (true)

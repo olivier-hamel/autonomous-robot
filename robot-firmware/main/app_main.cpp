@@ -15,9 +15,27 @@
 #include "drive/yahboom_motor_driver.h"
 #include "drive/drive_base.h"
 
-#include "micro_ros/micro_ros_int32_publisher.h"
+#include "micro_ros/micro_ros_cmd_vel.h"
+#include "micro_ros/micro_ros_odometry.h"
+
+#include "odometry/differential_odometry.h"
+#include "odometry/odometry_task.h"
 
 static const char *TAG = "app";
+
+class DriveBaseCommandSink : public DriveCommandSink
+{
+public:
+    explicit DriveBaseCommandSink(DriveBase &drive) : drive_(drive) {}
+
+    esp_err_t applyTwist(float linear_x_mps, float angular_z_radps) override
+    {
+        return drive_.setTwist(linear_x_mps, angular_z_radps);
+    }
+
+private:
+    DriveBase &drive_;
+};
 
 static void scan_bus(I2CBus &bus)
 {
@@ -92,8 +110,14 @@ extern "C" void app_main()
     YahboomMotorDriver motor(bus);
     bool motor_ready = false;
     std::unique_ptr<DriveBase> drive_base;
+    std::unique_ptr<DriveBaseCommandSink> cmd_vel_sink;
+    std::unique_ptr<DriveBaseWheelSource> wheel_source;
+    std::unique_ptr<DifferentialDriveOdometry> odom_estimator;
+    std::unique_ptr<QueueOdometrySink> odom_queue;
+    std::unique_ptr<OdometryTask> odom_task;
     MotorConfig motor_cfg = MotorConfig::Default520();
     const DriveGeometry drive_geom{0.23f, 800.f};
+    const float wheel_radius_m = motor_cfg.wheel_diameter_mm * 0.0005f;
 
     esp_err_t probe_26 = bus.probeAddress(0x26);
     if (probe_26 != ESP_OK)
@@ -120,6 +144,23 @@ extern "C" void app_main()
                 motor_ready = true;
                 ESP_LOGI(TAG, "Motor driver ready");
                 drive_base = std::make_unique<DriveBase>(motor, motor_cfg, drive_geom);
+                cmd_vel_sink = std::make_unique<DriveBaseCommandSink>(*drive_base);
+                wheel_source = std::make_unique<DriveBaseWheelSource>(*drive_base);
+                odom_estimator = std::make_unique<DifferentialDriveOdometry>(drive_geom.track_width_m, wheel_radius_m);
+                odom_queue = std::make_unique<QueueOdometrySink>(16);
+                if (odom_queue && odom_queue->valid() && wheel_source && odom_estimator)
+                {
+                    odom_task = std::make_unique<OdometryTask>(*wheel_source, *odom_estimator, *odom_queue, pdMS_TO_TICKS(50));
+                    esp_err_t odom_task_err = odom_task->start("odom_task", tskIDLE_PRIORITY + 2, 4096, tskNO_AFFINITY);
+                    if (odom_task_err != ESP_OK)
+                    {
+                        ESP_LOGW(TAG, "Odometry task not started: %s", esp_err_to_name(odom_task_err));
+                    }
+                }
+                else
+                {
+                    ESP_LOGW(TAG, "Odometry components not initialized");
+                }
                 xTaskCreate(motor_test_task, "motor_test", 4096, drive_base.get(), tskIDLE_PRIORITY + 3, nullptr);
             }
         }
@@ -154,10 +195,30 @@ extern "C" void app_main()
     OrientationTask orientation_task(imu, filter, pdMS_TO_TICKS(50));
     ESP_ERROR_CHECK(orientation_task.start("imu_task", tskIDLE_PRIORITY + 2, 4096, tskNO_AFFINITY));
 
-    esp_err_t uros_err = micro_ros_int32_publisher_start();
-    if (uros_err != ESP_OK)
+    if (cmd_vel_sink)
     {
-        ESP_LOGW(TAG, "micro-ROS publisher not started: %s", esp_err_to_name(uros_err));
+        esp_err_t uros_err = micro_ros_cmd_vel_start(*cmd_vel_sink);
+        if (uros_err != ESP_OK)
+        {
+            ESP_LOGW(TAG, "micro-ROS cmd_vel subscriber not started: %s", esp_err_to_name(uros_err));
+        }
+    }
+    else
+    {
+        ESP_LOGW(TAG, "micro-ROS cmd_vel subscriber skipped (drive not ready)");
+    }
+
+    if (odom_queue && odom_queue->valid())
+    {
+        esp_err_t odom_err = micro_ros_odometry_start(*odom_queue);
+        if (odom_err != ESP_OK)
+        {
+            ESP_LOGW(TAG, "micro-ROS odometry publisher not started: %s", esp_err_to_name(odom_err));
+        }
+    }
+    else
+    {
+        ESP_LOGW(TAG, "micro-ROS odometry publisher skipped (odometry not ready)");
     }
 
     OrientationSample sample{};

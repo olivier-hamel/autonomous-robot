@@ -1,6 +1,7 @@
 #include <cstdio>
 
 #include <array>
+#include <cmath>
 #include <memory>
 
 #include "esp_log.h"
@@ -226,6 +227,12 @@ extern "C" void app_main()
     {
         if (xQueueReceive(orientation_task.queue(), &sample, pdMS_TO_TICKS(1000)) == pdTRUE)
         {
+            if (odom_estimator)
+            {
+                const float yaw_rad = sample.orientation.yaw * static_cast<float>(M_PI) / 180.0f;
+                odom_estimator->setYawHint(yaw_rad);
+            }
+
             ESP_LOGI(TAG, "Roll: %.2f deg, Pitch: %.2f deg, Yaw: %.2f deg (ts=%lld)",
                      sample.orientation.roll, sample.orientation.pitch, sample.orientation.yaw,
                      static_cast<long long>(sample.timestamp_us));
